@@ -108,6 +108,7 @@ async fn get_todos(State(state): State<Db>) -> HttpResponse {
         .unwrap()
         .map(|todo| todo.unwrap())
         .collect::<Vec<Todo>>();
+    println!("{:#?}", todos);
 
     Ok((StatusCode::OK, Response::todos(todos)))
 }
@@ -121,7 +122,10 @@ async fn get_todo(State(state): State<Db>, Path(id): Path<Uuid>) -> HttpResponse
         });
 
     match res {
-        Ok(todo) => Ok((StatusCode::OK, Response::todo(todo))),
+        Ok(todo) => {
+            println!("{:#?}", todo);
+            Ok((StatusCode::OK, Response::todo(todo)))
+        }
         Err(e) => {
             eprintln!("{}", e);
             Err(StatusCode::NOT_FOUND)
@@ -168,6 +172,11 @@ async fn main() {
         .route("/todos", get(get_todos).post(add_todo))
         .with_state(shared_state);
     let listener = tokio::net::TcpListener::bind("0.0.0.0:8080").await.unwrap();
+
+    println!(
+        "Server listening on host: {}",
+        &listener.local_addr().unwrap()
+    );
 
     axum::serve(listener, app).await.unwrap();
 }
